@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+	<meta name="description" content="">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0"> 
+<meta name="apple-mobile-web-app-status-bar-style" content="black"> 
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+    <title>myroom</title>
+	<style>
+	.bnt-style{
+	width:80px;
+	height:80px;
+	font-size:20px;
+	color:white;
+	font-weight:bold;
+	background-color:red;
+	}
+	.bnt-close{
+	background-color:red;
+	}
+	.bnt-open{
+	background-color:green;
+	}
+	.bnt-run{
+	background-color:yellow;
+	}
+	.bnt-black{
+	background-color:black;
+	}
+	.bnt-blue{
+	background-color:blue;
+	}
+	.bnt-olive{
+	background-color:olive;
+	}
+	p{
+	margin: 5px 0;
+	}
+	</style>
+</head>
+<body>
+	<p style="font-size:25px;" id="temp"></p>
+	<p style="font-size:25px;" id="humidity"></p>
+	<input type="button" value="小灯" class="bnt-open bnt-style" onclick="deng()"/>
+	<!-- <input type="button" value="开灯" class="bnt-open bnt-style" onclick="openDeng()"/> -->
+    <!-- <input type="button" value="关灯" class="bnt-close bnt-style" onclick="shutDown()"/> -->
+	<input type="button" value="跑步" class="bnt-run bnt-style" onclick="run()"/>
+	<input type="button" value="窗户" class="bnt-open bnt-style" onclick="kan()"/>
+	<!-- <input type="button" value="关窗" class="bnt-close bnt-style" onclick="guan()"/> -->
+	<!-- <input type="button" value="暂停" class="bnt-run bnt-style" onclick="stop()"/> -->
+	<input type="button" value="关机" class="bnt-black bnt-style" onclick="shutdown()"/>
+	<input type="button" value="拍照" class="bnt-blue bnt-style" onclick="camera()"/>
+	<input type="button" value="视频" class="bnt-olive bnt-style" onclick="video()"/>
+	<input type="button" value="关频" class="bnt-red bnt-style" onclick="stop_vido()"/>
+	<div id="showimg"></div>
+	<iframe id = "video" src="http://192.168.1.22:8082/index.html" style="border: none;padding: 0;" scrolling='no' width="100%"></iframe>
+	
+	<script src="jQuery-2.2.0.min.js"></script>
+	<script src="layer_mobile/layer.js"></script>
+	
+	<script>
+	
+	$.ajax({
+		type : "get",
+		url : '/api/showTem',
+		success : function(data) {
+			data=data.replace(/'/g,"\"");
+			var json=JSON.parse(data);
+			$('#temp').html('温度：'+json.Temp+" ℃");
+			$('#humidity').html('湿度：'+json.Humidity+" %");
+			$('#temp').append(' / '+json.outTemp+" ℃");
+			$('#humidity').append(' / '+json.outHumidity+" %");
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	function shutDown(){
+		$.ajax({
+		type : "get",
+		url : '/api/shutDown',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '关闭成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function openDeng(){
+		$.ajax({
+		type : "get",
+		url : '/api/open',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '打开成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function deng(){
+		$.ajax({
+		type : "get",
+		url : '/api/deng',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '操作成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function run(){
+		var msg= "1.跑步鞋<br>2.带着钱<br>3.喝水\xa0\xa0\xa0<br>4.拿纸\xa0\xa0\xa0<br>5.头套\xa0\xa0\xa0<br>6.护腰\xa0\xa0\xa0<br>7.钥匙\xa0\xa0\xa0<br>8.手表\xa0\xa0\xa0";
+		//询问框
+  layer.open({
+    content: msg
+    ,btn: ['确定', '取消']
+	,style: 'font-size:20px;'
+    ,yes: function(index){
+      $.ajax({
+		type : "get",
+		url : '/api/run',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+    }
+  });
+	}
+	function kan(){
+		$.ajax({
+		type : "get",
+		url : '/api/kanchuang',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '操作成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function stop(){
+		$.ajax({
+		type : "get",
+		url : '/api/stop',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '操作成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function guan(){
+		$.ajax({
+		type : "get",
+		url : '/api/guanchuang',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '操作成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function shutdown(){
+		$.ajax({
+		type : "get",
+		url : '/api/shutdown',
+		success : function(data) {
+			if(data=="success"){
+				layer.open({
+					content: '操作成功'
+					,skin: 'msg'
+					,time: 2 //2秒后自动关闭
+				  });
+			}
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	
+	}
+	function camera(){
+	$.ajax({
+		type : "get",
+		url : '/api/camera',
+		success : function(data) {
+			console.log(data)
+			
+			$('#showimg').append('<img src="data:;base64,'+data+'" width="100%"/>')
+		},
+		error : function(data) {
+			alert("请求失败");
+		}
+	});
+	}
+	function video(){
+		$.ajax({
+			type : "get",
+			url : '/api/openVideo',
+			success : function(data) {
+				if(data=="success"){
+					
+					layer.open({
+						content: '操作成功'
+						,skin: 'msg'
+						,time: 2 //2秒后自动关闭
+					  });
+				}
+				
+			},
+			error : function(data) {
+				alert("请求失败");
+			}
+		});
+		setTimeout(function (){
+			$('#video').attr("src","http://192.168.1.22:8082/index.html");
+		}, 3000);
+	}
+	function stop_vido(){
+		$.ajax({
+			type : "get",
+			url : '/api/stopVideo',
+			success : function(data) {
+				if(data=="success"){
+					layer.open({
+						content: '操作成功'
+						,skin: 'msg'
+						,time: 2 //2秒后自动关闭
+					  });
+					
+				}
+				
+			},
+			error : function(data) {
+				alert("请求失败");
+			}
+		});
+	}
+	</script>
+</body>
+</html>
