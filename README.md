@@ -12,13 +12,13 @@
 三、主要技术详解
     
     1.python 
-      (1) 廖雪峰 的官方网站 就足够了。#https://www.liaoxuefeng.com/wiki/1016959663602400
+      (1) 廖雪峰 的官方网站 就足够了。[参考]https://www.liaoxuefeng.com/wiki/1016959663602400
     2.定时框架 Apscheduler
       (1) [参考](http://www.sohu.com/a/322257169_120104204)
       (2) [参考](https://blog.csdn.net/blueheart20/article/details/70219490)
     3.tensorflow
       (1) 电脑安装和树莓派安装只看官网就够了 [参考](https://www.tensorflow.org/install)
-      (2) 训练模型，因为我只需要判断窗帘是关闭还是打开的状态，所以我训练的是二分类模型 参考：猫狗二分类模型
+      (2) 训练模型，因为我只需要判断窗帘是关闭还是打开的状态，所以我训练的是二分类模型 参考：猫狗二分类模型 https://tf.wiki/zh/basic/tools.html
       (3) 训练好模型之后，把模型复制到树莓派上，用摄像头拍照并识别窗帘的状态
     4.树莓派
       (1)远程 用的是putty
