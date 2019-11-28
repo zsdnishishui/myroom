@@ -33,4 +33,7 @@
         Ⅱ视频 [参考](https://github.com/waveform80/pistreaming)
      5.siri语音识别
         手机安装快捷指令app，用语音发送树莓派控制指令或用siri读出返回的结果
+
+![image](https://github.com/zsdnishishui/uploadImg/blob/master/chuang.png)
+![image](https://github.com/zsdnishishui/uploadImg/blob/master/zongcheng.png)
           
