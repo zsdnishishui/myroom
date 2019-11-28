@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-
-'tensorflow用模型来判断窗帘图片的状态'
-
-__author__ = 'zhou'
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
