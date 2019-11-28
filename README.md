@@ -12,7 +12,7 @@
 三、主要技术详解
     
     1.python 
-      (1) 廖雪峰 的官方网站 就足够了。[参考](https://www.liaoxuefeng.com/wiki/1016959663602400)
+      (1) 廖雪峰 的官方网站 就足够了。[参考](#https://www.liaoxuefeng.com/wiki/1016959663602400)
     2.定时框架 Apscheduler
       (1) [参考](http://www.sohu.com/a/322257169_120104204)
       (2) [参考](https://blog.csdn.net/blueheart20/article/details/70219490)
