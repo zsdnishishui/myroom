@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+'杀掉进程'
+
+__author__ = 'zhou'
+
 import os,signal
-
-
-
 def kill_video():
     out=os.popen("ps aux").read()
     for line in out.splitlines():

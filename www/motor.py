@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-                 #通过声明可以在程序中书写中文
+
+'控制电机的模块'
+
 import RPi.GPIO as GPIO                 #引入RPi.GPIO库函数命名为GPIO
 import time   
 

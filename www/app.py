@@ -70,11 +70,11 @@ async def init(loop):
     app = web.Application(loop=loop, middlewares=[
         logger_factory, response_factory
     ])
-    add_routes(app, 'handlers')
-    add_static(app)
-    start_sch()
-    init_deng_state()
-    init_chuang_state()
+    add_routes(app, 'handlers') #添加接口路径
+    add_static(app) #添加静态路径
+    start_sch() #启动定时框架
+    init_deng_state() #初始化灯的状态
+    init_chuang_state() #初始化窗帘的状态
     srv = await loop.create_server(app.make_handler(), '192.168.1.22', 9000)
     logging.info('server started at http://192.168.1.22:9000...')
     return srv

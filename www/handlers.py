@@ -38,15 +38,18 @@ __author__ = 'zhou'
 import RPi.GPIO as GPIO
 import Adafruit_DHT
 # 输入邮件地址, 口令和POP3服务器地址:
-email = '**'
-from_addr = '**'
-password = '**'
-to_addr = '***'
-smtp_server = '**'
-pop3_server = '**'
+email = '**' #你的email 的地址
+from_addr = '**' #你的email 的地址
+password = '**' #你的email 的密码
+to_addr = '***' #email 的目的地址
+smtp_server = '**' #smtp服务器 的地址
+pop3_server = '**' #pop3服务器 的地址
 chuang_state=None
 deng_state=None
 def init_deng_state():
+    '''
+        灯的初始状态
+    '''
     global deng_state
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(12, GPIO.OUT)
@@ -55,6 +58,9 @@ def init_deng_state():
     else:
         deng_state='close'
 def init_chuang_state():
+    '''
+        窗帘的初始状态，是用tensorflow来判断的，这个地点也是此项目的亮点
+    '''
     global chuang_state
     img_url=take_camera()
     win_state=get_winstate(img_url)
@@ -83,6 +89,9 @@ def print_info(msg, indent=0):
     hdr, addr = parseaddr(msg.get('From', ''))
     return  addr,value
 async def sch_job():
+    '''
+    定时查询邮件的任务，参考的是廖雪峰的网站
+    '''
     server = poplib.POP3(pop3_server)
     server.set_debuglevel(0)
     server.user(email)
@@ -138,10 +147,16 @@ async def sch_job():
     server.quit()
 @get('/api/run')
 async def run():
+    '''
+        记录跑步的时间，这是我的个人生活
+    '''
     await execute('insert into run_rec(state)values(?)',('run'))
     return "success"
 @get('/api/camera')
 async def camera():
+    '''
+        拍照，并在浏览器上显示
+    '''
     file_url=take_camera()
     import base64
     img_stream = ''
@@ -152,10 +167,16 @@ async def camera():
     return img_stream
 @get('/api/shutdown')
 async def shutdown():
+    '''
+        用requests模块，发送关闭计算机的指令
+    '''
     r0 = requests.get("http://192.168.1.3:5000/shutdown")
     return "success"
 @get('/api/kanchuang')
 async def kanchuang():
+    '''
+     控制窗户
+    '''
     if chuang_state=='close':
         t = threading.Thread(target=chuangkan, name='LoopThread0')
         t.start()
@@ -177,6 +198,9 @@ async def stop():
     return "success"
 @get('/api/shutDown')
 async def api_register_user():
+    '''
+        关灯
+    '''
     GPIO.output(12, GPIO.LOW)
     await execute('insert into light(state)values(?)', ('close'))
     global deng_state
@@ -184,6 +208,9 @@ async def api_register_user():
     return "success"
 @get('/api/open')
 async def api_register_users():
+    '''
+        开灯
+    '''
     GPIO.output(12, GPIO.HIGH)
     await execute('insert into light(state)values(?)', ('open'))
     global deng_state
@@ -203,6 +230,9 @@ async def deng_caozuo():
     return "success"
 @get('/api/showTem')
 async def api_register_userss():
+    '''
+    爬取天气
+    '''
     out_temp,out_hum=getWeather()
     hum_index = out_hum.index("%")
     out_hum=out_hum[3:hum_index]
@@ -218,6 +248,9 @@ async def api_register_userss():
         }
 @get('/api/getTem')
 async def getTem():
+    '''
+    获取室内温度与湿度
+    '''
     sensor=Adafruit_DHT.DHT11
     gpio=17
     humidity, temperature = Adafruit_DHT.read_retry(sensor, gpio)
@@ -228,11 +261,18 @@ async def getTem():
         }
 @get('/api/openVideo')
 async def openVideo():
+    '''
+    打开摄像头的进程，这个进程启动的是https://github.com/waveform80/pistreaming这个项目，
+    用进程来启动而不是用线程来启动这个项目，是因为进程能够，用代码来关闭
+    '''
     p = Process(target=videoCmd)
     p.start()
     return "success"
 @get('/api/stopVideo')
 async def stopVideo():
+    '''
+    杀掉摄像的进程
+    '''
     kill_video()
     return "success"
 def getWeather():

@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+'通过ping我的手机的ip来判断我是不是到家了'
+
+__author__ = 'zhou'
+
 import subprocess
 import re
 import os
