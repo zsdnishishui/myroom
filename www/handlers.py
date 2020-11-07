@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import datetime
+from aiohttp import web
 from multiprocessing import Process
 from email import encoders
 from email.header import Header, decode_header
@@ -17,8 +18,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from bs4 import BeautifulSoup
 import requests
 from coroweb import get, post
-from orm import execute
-from motor import zheng,fan,stopC
+from orm import execute,select
+from motor import zheng,fan,stopC,zheng2,fan2,stop2
 from picamera import PiCamera
 import time,threading
 from email.mime.base import MIMEBase
@@ -26,7 +27,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pingUtil import getHome
 from predict import get_winstate
-from killps import kill_video
+from killps import kill_video,kill_natapp
+from models import User
+import pytz
 __author__ = 'zhou'
 
 ' url handlers '
@@ -37,16 +40,63 @@ __author__ = 'zhou'
 
 import RPi.GPIO as GPIO
 import Adafruit_DHT
+import sys 
+from sys import path
+path.append('/home/pi')
+import config_default
 # 输入邮件地址, 口令和POP3服务器地址:
-email = '**'
-from_addr = '**'
-password = '**'
-to_addr = '***'
-smtp_server = '**'
-pop3_server = '**'
+email_config = config_default.config['email']
+
+email = email_config['email']
+from_addr = email_config['from_addr']
+password = email_config['password']
+to_addr = email_config['to_addr']
+smtp_server = email_config['smtp_server']
+pop3_server = email_config['pop3_server']
 chuang_state=None
 deng_state=None
+sched=None
+COOKIE_NAME = 'awesession'
+_COOKIE_KEY = "configs.session.secret"
+# 计算加密cookie:
+def user2cookie(user, max_age):
+    # build cookie string by: id-expires-sha1
+    expires = str(int(time.time() + max_age))
+    s = '%s-%s-%s-%s' % (user['id'], user['passwd'], expires, _COOKIE_KEY)
+    L = [user['id'], expires, hashlib.sha1(s.encode('utf-8')).hexdigest()]
+    return '-'.join(L)
+async def cookie2user(cookie_str):
+    '''
+    Parse cookie and load user if cookie is valid.
+    '''
+    user=None
+    if not cookie_str:
+        return None
+    try:
+        L = cookie_str.split('-')
+        if len(L) != 3:
+            return None
+        uid, expires, sha1 = L
+        if int(expires) < time.time():
+            return None
+        logging.info("-----------------"+uid)
+        if uid=='1':
+            user = {'id':'1','passwd':'123456'}
+        if user is None:
+            return None
+        s = '%s-%s-%s-%s' % (uid, user['passwd'], expires, _COOKIE_KEY)
+        if sha1 != hashlib.sha1(s.encode('utf-8')).hexdigest():
+            logging.info('invalid sha1')
+            return None
+        user['passwd'] = '******'
+        return user
+    except Exception as e:
+        logging.exception(e)
+        return None
 def init_deng_state():
+    '''
+        灯的初始状态
+    '''
     global deng_state
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(12, GPIO.OUT)
@@ -55,6 +105,9 @@ def init_deng_state():
     else:
         deng_state='close'
 def init_chuang_state():
+    '''
+        窗帘的初始状态，是用tensorflow来判断的，这个地点也是此项目的亮点
+    '''
     global chuang_state
     img_url=take_camera()
     win_state=get_winstate(img_url)
@@ -82,7 +135,11 @@ def print_info(msg, indent=0):
     value = decode_str(msg.get('Subject', ''))
     hdr, addr = parseaddr(msg.get('From', ''))
     return  addr,value
+@get('/api/schJob')
 async def sch_job():
+    '''
+    定时查询邮件的任务，参考的是廖雪峰的网站
+    '''
     server = poplib.POP3(pop3_server)
     server.set_debuglevel(0)
     server.user(email)
@@ -105,7 +162,7 @@ async def sch_job():
     msg = Parser().parsestr(msg_content)
     fro,sub=print_info(msg)
     #print(sub)
-    if "1053604549@qq.com"==fro:
+    if from_addr==fro:
         if "枕边头套"==sub:
             server.dele(index)
         if "关灯"==sub:
@@ -136,12 +193,40 @@ async def sch_job():
             sendEmailFile(file_url)
     # 关闭连接:
     server.quit()
+
+@get('/api/shutdownlinux')
+def shutdownlinux():
+    os.system("sudo shutdown -h now")
+@get('/api/test')
+def test():
+    logging.info("test---test")
 @get('/api/run')
 async def run():
+    '''
+        记录跑步的时间，这是我的个人生活
+    '''
     await execute('insert into run_rec(state)values(?)',('run'))
     return "success"
+@post('/api/login')
+def login(*,username,passwd):
+    logging.info(username+'-------------------------------'+passwd)
+    if username=='001' and passwd=='123456':
+        user = {'username':'001','passwd':'123456','id':'1','state':'success'}
+        r = web.Response()
+        r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age=86400, httponly=True)
+        user['passwd'] = '******'
+        r.content_type = 'application/json'
+        r.body = json.dumps(user, ensure_ascii=False).encode('utf-8')
+        return r
+    return "error"
+@get('/signin')
+def signin():
+    return "login"
 @get('/api/camera')
 async def camera():
+    '''
+        拍照，并在浏览器上显示
+    '''
     file_url=take_camera()
     import base64
     img_stream = ''
@@ -152,18 +237,19 @@ async def camera():
     return img_stream
 @get('/api/shutdown')
 async def shutdown():
-    r0 = requests.get("http://192.168.1.3:5000/shutdown")
+    '''
+        用requests模块，发送关闭计算机的指令
+    '''
+    r0 = requests.get("http://W4HUDGN5ZEIGEHX:5000/shutdown")
     return "success"
 @get('/api/kanchuang')
 async def kanchuang():
-    if chuang_state=='close':
-        t = threading.Thread(target=chuangkan, name='LoopThread0')
-        t.start()
-        t.join
-    if chuang_state=='open':
-        t = threading.Thread(target=chuangguan, name='LoopThread0')
-        t.start()
-        t.join
+    '''
+     控制窗户
+    '''
+    t = threading.Thread(target=chuangkan, name='LoopThread0')
+    t.start()
+    t.join
     return "success"
 @get('/api/guanchuang')
 async def guanchuang():
@@ -175,8 +261,33 @@ async def guanchuang():
 async def stop():
     stopC()
     return "success"
+@get('/api/stopKong')
+async def stopKong():
+    '''t = threading.Thread(target=stop2, name='LoopThread0')
+    t.start()
+    t.join'''
+    stop2();
+    return "success"
+@get('/api/openKong')
+async def openKong():
+    zheng2()
+    return "success"
+@get('/api/closeKong')
+async def closeKong():
+    fan2()
+    return "success"
+@get('/api/kongKong')
+async def kongKong():
+    t = threading.Thread(target=kongtiao, name='kongtiao')
+    t.start()
+    t.join
+    
+    return "success"
 @get('/api/shutDown')
 async def api_register_user():
+    '''
+        关灯
+    '''
     GPIO.output(12, GPIO.LOW)
     await execute('insert into light(state)values(?)', ('close'))
     global deng_state
@@ -184,6 +295,9 @@ async def api_register_user():
     return "success"
 @get('/api/open')
 async def api_register_users():
+    '''
+        开灯
+    '''
     GPIO.output(12, GPIO.HIGH)
     await execute('insert into light(state)values(?)', ('open'))
     global deng_state
@@ -201,42 +315,59 @@ async def deng_caozuo():
         await execute('insert into light(state)values(?)', ('close'))
         deng_state='close'
     return "success"
+@get('/api/taideng')
+async def taideng():
+    GPIO.setup(16, GPIO.OUT)
+    GPIO.output(16, GPIO.HIGH)
+    time.sleep(4)
+    GPIO.output(16, GPIO.LOW)
+    return "success"
 @get('/api/showTem')
 async def api_register_userss():
-    out_temp,out_hum=getWeather()
-    hum_index = out_hum.index("%")
-    out_hum=out_hum[3:hum_index]
-    sensor=Adafruit_DHT.DHT11
-    gpio=17
-    humidity, temperature = Adafruit_DHT.read_retry(sensor, gpio)
-    await execute('insert into temp_hum(temp,humidity,out_tem,out_hum)values(?,?,?,?)', (temperature, humidity,out_temp,out_hum))
-    return {
-        'Temp': temperature,
-        'Humidity': humidity,
-        'outTemp': out_temp,
-        'outHumidity': out_hum
-        }
+    res=await select('select temp,humidity,out_tem,out_hum from temp_hum order by add_time desc limit 1',());
+    return json.dumps(res[0])
 @get('/api/getTem')
-async def getTem():
+def getTem():
+    '''
+    获取室内温度与湿度
+    '''
     sensor=Adafruit_DHT.DHT11
     gpio=17
     humidity, temperature = Adafruit_DHT.read_retry(sensor, gpio)
-    await execute('insert into temp_hum(temp,humidity)values(?,?)', (temperature, humidity))
     return {
-        '温度': temperature,
-        '湿度': humidity
+        '温度': int(temperature),
+        '湿度': int(humidity)
         }
 @get('/api/openVideo')
 async def openVideo():
+    '''
+    打开摄像头的进程，这个进程启动的是https://github.com/waveform80/pistreaming这个项目，
+    用进程来启动而不是用线程来启动这个项目，是因为进程能够，用代码来关闭
+    '''
     p = Process(target=videoCmd)
     p.start()
     return "success"
 @get('/api/stopVideo')
 async def stopVideo():
+    '''
+    杀掉摄像的进程
+    '''
     kill_video()
     return "success"
+@get('/api/stopNatapp')
+async def stopNatapp():
+    newRoomUrl()
+    return "success"
+
+@get('/api/pauseSch')
+async def pauseSch():
+    '''
+    暂停任务
+    '''
+    pause_sch()
+    return "success"
 def getWeather():
-    htmlData = request.urlopen("https://tianqi.moji.com/weather/china/shandong/huaiyin-district").read().decode('utf-8')
+    htmlData = request.urlopen("https://tianqi.moji.com/weather/china/shandong/lixia-district").read().decode('utf-8')
     soup = BeautifulSoup(htmlData, 'html.parser')
     weather = soup.find('div',attrs={'class':"wea_weather clearfix"})
     temp1 = weather.find('em').get_text()#当前温度
@@ -246,11 +377,58 @@ def getWeather():
     S = soup.select(".wea_about.clearfix > em")[0].get_text()#风速
     return temp1,H
 def start_sch():
-    sched = AsyncIOScheduler()
-    sched.add_job(sch_job, 'cron', hour='8-20', minute="*/10",id='my_job_id')
-    sched.add_job(sendEmail,'cron',hour='22', minute="30",args=["枕边头套"],id='my_job_id2')
-    sched.add_job(getHome_job,'cron',day_of_week='mon-fri',hour='17-19', minute="*/1",id='my_job_id3')
-    sched.start()    
+    global sched
+    sched= AsyncIOScheduler()
+#    sched.add_job(sch_job, 'cron', hour='8-20', minute="*/10",id='my_job_id')
+#    sched.add_job(sendEmail,'cron',hour='22', minute="30",args=["枕边头套"],id='my_job_id2')
+    sched.add_job(newRoomUrl,'cron',hour='9', minute="30",timezone=pytz.utc,id='my_job_id6')
+    sched.add_job(tem_job, 'cron', minute="*/30",id='my_job_id5')
+    sched.add_job(resume_job,'cron',hour='9', minute="30",timezone=pytz.utc,id='my_job_id4')
+    sched.add_job(getHome_job,'cron',day_of_week='mon-fri', hour='10-12',minute="*/1",timezone=pytz.utc,id='my_job_id3')
+    sched.add_job(delMyUrl, 'cron', hour='15',timezone=pytz.utc,id='my_job_id7')
+    sched.add_job(cpufengshan, 'cron', minute="*/10",id='my_job_id8')
+    sched.start()
+def cpufengshan():
+    file = open("/sys/class/thermal/thermal_zone0/temp")
+    # 读取结果，并转换为浮点数
+    temp = float(file.read()) / 1000
+    logging.info("cputemp++++++++"+str(temp))
+    if temp > 60:
+        GPIO.setup(18, GPIO.OUT)
+        GPIO.output(18, GPIO.HIGH)
+    elif temp < 46:
+        GPIO.setup(18, GPIO.OUT)
+        GPIO.output(18, GPIO.LOW)
+def delMyUrl():
+    server = poplib.POP3(pop3_server)
+    server.set_debuglevel(0)
+    server.user(email)
+    server.pass_(password)
+    resp, mails, octets = server.list()
+    index = len(mails)
+    resp, lines, octets = server.retr(index)
+    msg_content = b'\r\n'.join(lines).decode('utf-8')
+    msg = Parser().parsestr(msg_content)
+    fro,sub=print_info(msg)
+    if from_addr==fro and sub.startswith("http://"):
+        server.dele(index)
+    # 关闭连接:
+    server.quit()
+def pause_sch():
+    sched.get_job('my_job_id3').pause()
+def resume_job():
+    sched.get_job('my_job_id3').resume() 
+async def tem_job():
+    '''
+    爬取天气
+    '''
+    out_temp,out_hum=getWeather()
+    hum_index = out_hum.index("%")
+    out_hum=out_hum[3:hum_index]
+    sensor=Adafruit_DHT.DHT11
+    gpio=17
+    humidity, temperature = Adafruit_DHT.read_retry(sensor, gpio)
+    await execute('insert into temp_hum(temp,humidity,out_tem,out_hum)values(?,?,?,?)', (temperature, humidity,out_temp,out_hum))
 def sendEmail(suc):
     msg = MIMEText('hello, send by Python...', 'plain', 'utf-8')
     msg['From'] = _format_addr('你是谁  <%s>' % from_addr)
@@ -266,16 +444,8 @@ def _format_addr(s):
     return formataddr((Header(name, 'utf-8').encode(), addr))
 def chuangkan():
     zheng()
-    time.sleep(9.5)
-    stopC()
-    global chuang_state
-    chuang_state='open'
 def chuangguan():
     fan()
-    time.sleep(9)
-    stopC()
-    global chuang_state
-    chuang_state='close'
 def sendEmailFile(url):
     msg = MIMEMultipart()
     msg['From'] = _format_addr('你是谁  <%s>' % from_addr)
@@ -306,15 +476,59 @@ def sendEmailFile(url):
 def take_camera():
     file_url=""
     with PiCamera() as camera:
-        time.sleep(0.1)
+        time.sleep(0.5)
         camera.resolution = (320, 240)
         file_url = "/home/pi/img/"+str(int(time.time()))+".jpg"
         camera.capture(file_url)
     return file_url
 async def getHome_job():
-    if chuang_state=="open":
-        if "yes" == getHome(): 
-            chuangguan()
+    if deng_state=="close":
+        if "yes" == getHome():
             await api_register_users()
 def videoCmd():
-    val = os.system("python3.7 /home/pi/videoTest/pistreaming-master/server.py")
+    val = os.system("python3.7 /home/pi/web/www/server.py")
+def kongtiao():
+    zheng2()
+    time.sleep(1)
+    stop2()
+    time.sleep(0.5)
+    fan2()
+    time.sleep(1)
+    stop2()
+def newRoomUrl():
+    url=""
+    index_url=""
+    file_data = ""
+    file_url = "/home/pi/natapp/myvideo/"
+    html_url = "/home/pi/natapp/"
+    file_html = '/home/pi/web/www/static/index.html'
+    kill_natapp()
+    if(os.path.exists(html_url+'nohup.out')):
+        os.remove(html_url+'nohup.out')
+    os.system("nohup "+html_url+"natapp > "+html_url+"nohup.out &")
+    time.sleep(1)
+    if(os.path.exists(file_url+'nohup.out')):
+        os.remove(file_url+'nohup.out')
+    os.system("nohup "+file_url+"natapp > "+file_url+"nohup.out &")
+    time.sleep(1)
+    with open(html_url+'nohup.out', 'r') as f:
+        text_lines = f.readlines()
+        for line in text_lines:
+            if line.find("established at") > 0:
+                index_url=line.split("established at")[1].strip()
+    with open(file_url+'nohup.out', 'r') as f:
+        text_lines = f.readlines()
+        for line in text_lines:
+            if line.find("established at") > 0:
+                url=line.split("established at")[1].strip()
+    logging.info("+++++++"+index_url)
+    with open(file_html, 'r',encoding="utf-8") as f:
+        text_lines = f.readlines()
+        for line in text_lines:
+            if line.find("//update") > 0:
+                line = "var videoUrl ='"+url+"';//update\n"
+                logging.info(line)
+            file_data += line
+    with open(file_html,"w",encoding="utf-8") as f:
+        f.write(file_data)
+    sendEmail(index_url)

@@ -36,8 +36,17 @@
 	.bnt-olive{
 	background-color:olive;
 	}
+	.bnt-gray{
+	background-color:gray;
+	}
 	p{
 	margin: 5px 0;
+	}
+	.fanzhuan{
+	-moz-transform:rotate(180deg);
+-webkit-transform:rotate(180deg);
+-o-transform:rotate(180deg);
+transform:rotate(180deg); 
 	}
 	</style>
 </head>
@@ -47,32 +56,88 @@
 	<input type="button" value="小灯" class="bnt-open bnt-style" onclick="deng()"/>
 	<!-- <input type="button" value="开灯" class="bnt-open bnt-style" onclick="openDeng()"/> -->
     <!-- <input type="button" value="关灯" class="bnt-close bnt-style" onclick="shutDown()"/> -->
-	<input type="button" value="跑步" class="bnt-run bnt-style" onclick="run()"/>
-	<input type="button" value="窗户" class="bnt-open bnt-style" onclick="kan()"/>
-	<!-- <input type="button" value="关窗" class="bnt-close bnt-style" onclick="guan()"/> -->
-	<!-- <input type="button" value="暂停" class="bnt-run bnt-style" onclick="stop()"/> -->
+	<!--<input type="button" value="跑步" class="bnt-run bnt-style" onclick="run()"/>-->
+	<input type="button" value="窗户" class="bnt-open bnt-style" onclick="kan()"/> 
+	<input type="button" value="关窗" class="bnt-close bnt-style" onclick="guan()"/> 
+	<input type="button" value="暂停" class="bnt-run bnt-style" onclick="stop()"/>
 	<input type="button" value="关机" class="bnt-black bnt-style" onclick="shutdown()"/>
-	<input type="button" value="拍照" class="bnt-blue bnt-style" onclick="camera()"/>
+	 <input type="button" value="拍照" class="bnt-blue bnt-style" onclick="camera()"/>
 	<input type="button" value="视频" class="bnt-olive bnt-style" onclick="video()"/>
 	<input type="button" value="关频" class="bnt-red bnt-style" onclick="stop_vido()"/>
+	<div id="showKongTiao" style="display: none;">
+	<input type="button" value="关" class="bnt-red bnt-style" onclick="stopKong()"/>
+	<input type="button" value="前" class="bnt-red bnt-style" onclick="openKong()"/>
+	<input type="button" value="后" class="bnt-red bnt-style" onclick="closeKong()"/>
+	</div>
+	<input type="button" value="开坐" class="bnt-open bnt-style" onclick="openzuo()"/>
+	<input type="button" value="关坐" class="bnt-red bnt-style" onclick="closezuo()"/>
+	<input type="button" value="煮饭" class="bnt-gray bnt-style" onclick="kongKong()"/>
+	<input type="button" value="调试" class="bnt-olive bnt-style" onclick="tiaoshi()"/> 
 	<div id="showimg"></div>
-	<iframe id = "video" src="http://192.168.1.22:8082/index.html" style="border: none;padding: 0;" scrolling='no' width="100%"></iframe>
-	
+	<iframe id = "video" src="index.html" style="border: none;padding: 0;" scrolling='no' width="100%" height="350"></iframe>
+	<iframe id = "chazuo" src="" style="border: none;padding: 0;display: none;" scrolling='no' width="100%"></iframe>
 	<script src="jQuery-2.2.0.min.js"></script>
 	<script src="layer_mobile/layer.js"></script>
 	
 	<script>
-	
+	//立即执行函数
+	(function ($) {
+	    //得到原始的 $.ajax的对象
+	    var _ajax = $.ajax;
+	    $.ajax = function (options) {
+	        //每次调用发送ajax请求的时候定义默认的error处理方法
+	        var fn = {
+	            beforeSend: function (XHR) { },
+	            complete: function (XHR, TS) { }
+	        }
+	        //如果在调用的时候写了error的处理方法，就不用默认的
+	        if (options.error) {
+	            fn.error = options.error;
+	        }
+	        //这里需要拦截掉原始的success处理，处理好了再去调用原始的方法
+	        if (options.success) {
+	            fn.success = options.success;
+	        }
+	        if (options.beforeSend) {
+	            fn.beforeSend = options.beforeSend;
+	        }
+	        if (options.complete) {
+	            fn.complete = options.complete;
+	        }
+	        //4.扩展原生的$.ajax方法，返回最新的参数
+	        var _options = $.extend(options, {
+	            error: function (XMLHttpRequest, textStatus, errorThrown) {
+	                fn.error(XMLHttpRequest, textStatus, errorThrown);
+	            },
+	            success: function (data, textStatus) {
+	            	if(data=="login"){
+	            		window.location.href = "login.html"
+	            	}
+	                fn.success(data, textStatus);
+	            },
+	            beforeSend: function (XHR) {
+	                fn.beforeSend(XHR);
+	            },
+	            complete: function (XHR, TS) {
+	                fn.complete(XHR, TS);
+	            }
+	        });
+	        //5.将最新的参数传回ajax对象
+	        _ajax(_options);
+	    };
+	})(jQuery);
+	function tiaoshi(){
+		$('#showKongTiao').show();
+	}
 	$.ajax({
 		type : "get",
 		url : '/api/showTem',
 		success : function(data) {
-			data=data.replace(/'/g,"\"");
 			var json=JSON.parse(data);
-			$('#temp').html('温度：'+json.Temp+" ℃");
-			$('#humidity').html('湿度：'+json.Humidity+" %");
-			$('#temp').append(' / '+json.outTemp+" ℃");
-			$('#humidity').append(' / '+json.outHumidity+" %");
+			$('#temp').html('温度：'+json.temp+" ℃");
+			$('#humidity').html('湿度：'+json.humidity+" %");
+			$('#temp').append(' / '+json.out_tem+" ℃");
+			$('#humidity').append(' / '+json.out_hum+" %");
 		},
 		error : function(data) {
 			alert("请求失败");
@@ -273,7 +338,7 @@
 			}
 		});
 		setTimeout(function (){
-			$('#video').attr("src","http://192.168.1.22:8082/index.html");
+			$('#video').attr("src","index.html");
 		}, 3000);
 	}
 	function stop_vido(){
@@ -295,6 +360,102 @@
 				alert("请求失败");
 			}
 		});
+	}
+	function stopKong(){
+		$.ajax({
+			type : "get",
+			url : '/api/stopKong',
+			success : function(data) {
+				if(data=="success"){
+					layer.open({
+						content: '操作成功'
+						,skin: 'msg'
+						,time: 2 //2秒后自动关闭
+					  });
+					
+				}
+				
+			},
+			error : function(data) {
+				alert("请求失败");
+			}
+		});
+	}
+	function openKong(){
+		$.ajax({
+			type : "get",
+			url : '/api/openKong',
+			success : function(data) {
+				if(data=="success"){
+					layer.open({
+						content: '操作成功'
+						,skin: 'msg'
+						,time: 2 //2秒后自动关闭
+					  });
+					
+				}
+				
+			},
+			error : function(data) {
+				alert("请求失败");
+			}
+		});
+	}
+	function closeKong(){
+		$.ajax({
+			type : "get",
+			url : '/api/closeKong',
+			success : function(data) {
+				if(data=="success"){
+					layer.open({
+						content: '操作成功'
+						,skin: 'msg'
+						,time: 2 //2秒后自动关闭
+					  });
+					
+				}
+				
+			},
+			error : function(data) {
+				alert("请求失败");
+			}
+		});
+	}
+	function kongKong(){
+		$.ajax({
+			type : "get",
+			url : '/api/kongKong',
+			success : function(data) {
+				if(data=="success"){
+					layer.open({
+						content: '操作成功'
+						,skin: 'msg'
+						,time: 2 //2秒后自动关闭
+					  });
+					
+				}
+				
+			},
+			error : function(data) {
+				alert("请求失败");
+			}
+		});
+	}
+	function openzuo(){
+		$('#chazuo').attr("src","http://ESP-BF4DC9:8088/on");
+		layer.open({
+			content: '操作成功'
+			,skin: 'msg'
+			,time: 2 //2秒后自动关闭
+		  });
+	}
+	function closezuo(){
+		$('#chazuo').attr("src","http://ESP-BF4DC9:8088/off");
+		layer.open({
+			content: '操作成功'
+			,skin: 'msg'
+			,time: 2 //2秒后自动关闭
+		  });
 	}
 	</script>
 </body>

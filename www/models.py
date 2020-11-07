@@ -11,6 +11,8 @@ import time, uuid
 
 from orm import Model, StringField, IntegerField
 
+class User(object):
+    pass
 
 class Light(Model):
     __table__ = 'light'

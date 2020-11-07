@@ -1,0 +1,12 @@
+eclipse.preferences.version=1
+encoding/<project>=UTF-8
+encoding/apis.py=utf-8
+encoding/app.py=utf-8
+encoding/coroweb.py=utf-8
+encoding/handlers.py=utf-8
+encoding/killps.py=utf-8
+encoding/models.py=utf-8
+encoding/motor.py=utf-8
+encoding/orm.py=utf-8
+encoding/pingUtil.py=utf-8
+encoding/watchFile.py=utf-8

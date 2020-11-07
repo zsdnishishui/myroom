@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+'杀掉进程'
+
+__author__ = 'zhou'
+
 import os,signal
-
-
-
 def kill_video():
     out=os.popen("ps aux").read()
     for line in out.splitlines():
@@ -9,7 +14,13 @@ def kill_video():
         if 'server.py' in line:
             pid = int(line.split()[1])
             os.kill(pid,signal.SIGKILL)
-
+def kill_natapp():
+    out=os.popen("ps -ef|grep natapp").read()
+    for line in out.splitlines():
+        #print(line)
+        if '/natapp' in line:
+            pid = int(line.split()[1])
+            os.kill(pid,signal.SIGKILL)
 def kill(pid):
     try:
         a = os.kill(pid, signal.SIGKILL)

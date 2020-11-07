@@ -4,4 +4,5 @@ encoding//www/app.py=utf-8
 encoding//www/handlers.py=utf-8
 encoding//www/motor.py=utf-8
 encoding//www/orm.py=utf-8
+encoding//www/pymonitor.py=utf-8
 encoding/<project>=UTF-8

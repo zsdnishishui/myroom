@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-                 #通过声明可以在程序中书写中文
+
+'控制电机的模块'
+
 import RPi.GPIO as GPIO                 #引入RPi.GPIO库函数命名为GPIO
 import time   
 
@@ -8,17 +11,17 @@ GPIO.setwarnings(False)
 #接口定义
 INT1 = 29                               #将L298 INT1口连接到树莓派Pin11
 INT2 = 31                           #将L298 INT2口连接到树莓派Pin12
-#INT3 = 33                              #将L298 INT3口连接到树莓派Pin13
-#INT4 = 35                              #将L298 INT4口连接到树莓派Pin15
+INT3 = 33                              #将L298 INT3口连接到树莓派Pin13
+INT4 = 35                              #将L298 INT4口连接到树莓派Pin15
 ENA = 36
-#ENB = 37
+ENB = 37
 #输出模式
 GPIO.setup(INT1,GPIO.OUT)
 GPIO.setup(INT2,GPIO.OUT)
-#GPIO.setup(INT3,GPIO.OUT)
-#GPIO.setup(INT4,GPIO.OUT)
+GPIO.setup(INT3,GPIO.OUT)
+GPIO.setup(INT4,GPIO.OUT)
 GPIO.setup(ENA,GPIO.OUT)
-#GPIO.setup(ENB,GPIO.OUT)
+GPIO.setup(ENB,GPIO.OUT)
 freq = 60
 speed = 100
 #pwm = GPIO.PWM(ENA, freq)           # 设置向ENA输入PWM脉冲信号，频率为freq并创建PWM对象
@@ -30,9 +33,18 @@ def zheng():
     #pwm.ChangeDutyCycle(speed)
     #while True:
         #pwm.ChangeDutyCycle(speed)
-    
+def zheng2(): 
+    GPIO.output(ENB,GPIO.HIGH)
+    GPIO.output(INT3,GPIO.HIGH)
+    GPIO.output(INT4,GPIO.LOW)
+def fan2(): 
+    GPIO.output(ENB,GPIO.HIGH)
+    GPIO.output(INT3,GPIO.LOW)
+    GPIO.output(INT4,GPIO.HIGH) 
 def stopC(): 
     GPIO.output(ENA,GPIO.LOW)
+def stop2(): 
+    GPIO.output(ENB,GPIO.LOW)
 def fan(): 
     GPIO.output(ENA,GPIO.HIGH)
     GPIO.output(INT1,GPIO.LOW)

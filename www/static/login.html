@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+	<meta name="description" content="">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0"> 
+<meta name="apple-mobile-web-app-status-bar-style" content="black"> 
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+</head>
+<body>
+用户：<input type = "text" id= "loginId"/><br><br>
+密码：<input type = "text" id= "passwd"/><br><br>
+<input type="button" value="登陆" onclick="login()"/>
+<script type="text/javascript" src="jQuery-2.2.0.min.js"></script>
+<!--footer end-->
+<script type="text/javascript">
+function login(){
+	var username=$('#loginId').val();
+	var passwd=$('#passwd').val();
+	if(username&&passwd){
+		$.ajax({
+			url:"/api/login",
+			type:"post",
+			data:{username:username,passwd:passwd},
+			success:function(data){
+				if("success"==data.state){
+					window.location.href = 'test.html';
+				}else{
+					alert("登陆失败");
+				}
+			},error:function(data){
+				
+			}
+		});
+	}
+	
+}
+function doAjax(url,type,data){
+	$.ajax({
+		url:url,
+		type:type,
+		//data:{key:localStorage.getItem("key")},
+		success:function(data){
+			if(typeof(data) == 'string'){
+				var json = JSON.parse(data);
+				if(json.code == 201){
+					localStorage.setItem("key", json.data);
+					console.log(json.message);
+					doAjax(url,type,data);
+				}else{
+					console.log(json.message);
+				}
+			}else{
+				if(data.res == "success"){
+					console.log(data.data);
+				}else{
+					console.log("内部出错");
+				}
+			}
+			
+		},error:function(data){
+			alert('请求失败')
+		},
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization',localStorage.getItem("key"))
+			xhr.setRequestHeader('isAjax','yes')
+	      }
+	});
+}
+</script>
+</body>
+</html>
