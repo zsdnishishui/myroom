@@ -17,7 +17,7 @@ import orm
 from coroweb import add_routes, add_static
 from handlers import start_sch,init_deng_state,init_chuang_state,cookie2user
 import sys
-sys.path
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 COOKIE_NAME = 'awesession'
 
 async def logger_factory(app, handler):
