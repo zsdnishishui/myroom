@@ -82,15 +82,9 @@ async def init(loop):
     add_static(app) #添加静态路径
     start_sch() #启动定时框架
     init_deng_state() #初始化灯的状态
-<<<<<<< HEAD
 #    init_chuang_state() #初始化窗帘的状态
     srv = await loop.create_server(app.make_handler(), '0.0.0.0', 9000)
     logging.info('server started')
-=======
-    init_chuang_state() #初始化窗帘的状态
-    srv = await loop.create_server(app.make_handler(), '192.168.1.22', 9000)
-    logging.info('server started at http://192.168.1.22:9000...')
->>>>>>> 08c91ff4e3d781b53f986c7d8689a05a0ea56be2
     return srv
 
 loop = asyncio.get_event_loop()
