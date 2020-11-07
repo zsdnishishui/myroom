@@ -11,13 +11,13 @@ import logging; logging.basicConfig(level=logging.INFO)
 
 import asyncio, os, json, time
 from datetime import datetime
-
+import sys
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 from aiohttp import web 
 import orm
 from coroweb import add_routes, add_static
 from handlers import start_sch,init_deng_state,init_chuang_state,cookie2user
-import sys
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
+
 COOKIE_NAME = 'awesession'
 
 async def logger_factory(app, handler):
