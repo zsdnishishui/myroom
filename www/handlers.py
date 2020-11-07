@@ -45,6 +45,7 @@ from sys import path
 path.append('/home/pi')
 import config_default
 # 输入邮件地址, 口令和POP3服务器地址:
+<<<<<<< HEAD
 email_config = config_default.config['email']
 
 email = email_config['email']
@@ -53,6 +54,14 @@ password = email_config['password']
 to_addr = email_config['to_addr']
 smtp_server = email_config['smtp_server']
 pop3_server = email_config['pop3_server']
+=======
+email = '**' #你的email 的地址
+from_addr = '**' #你的email 的地址
+password = '**' #你的email 的密码
+to_addr = '***' #email 的目的地址
+smtp_server = '**' #smtp服务器 的地址
+pop3_server = '**' #pop3服务器 的地址
+>>>>>>> 08c91ff4e3d781b53f986c7d8689a05a0ea56be2
 chuang_state=None
 deng_state=None
 sched=None
@@ -240,16 +249,31 @@ async def shutdown():
     '''
         用requests模块，发送关闭计算机的指令
     '''
+<<<<<<< HEAD
     r0 = requests.get("http://W4HUDGN5ZEIGEHX:5000/shutdown")
+=======
+    r0 = requests.get("http://192.168.1.3:5000/shutdown")
+>>>>>>> 08c91ff4e3d781b53f986c7d8689a05a0ea56be2
     return "success"
 @get('/api/kanchuang')
 async def kanchuang():
     '''
      控制窗户
     '''
+<<<<<<< HEAD
     t = threading.Thread(target=chuangkan, name='LoopThread0')
     t.start()
     t.join
+=======
+    if chuang_state=='close':
+        t = threading.Thread(target=chuangkan, name='LoopThread0')
+        t.start()
+        t.join
+    if chuang_state=='open':
+        t = threading.Thread(target=chuangguan, name='LoopThread0')
+        t.start()
+        t.join
+>>>>>>> 08c91ff4e3d781b53f986c7d8689a05a0ea56be2
     return "success"
 @get('/api/guanchuang')
 async def guanchuang():
@@ -324,10 +348,31 @@ async def taideng():
     return "success"
 @get('/api/showTem')
 async def api_register_userss():
+<<<<<<< HEAD
     res=await select('select temp,humidity,out_tem,out_hum from temp_hum order by add_time desc limit 1',());
     return json.dumps(res[0])
 @get('/api/getTem')
 def getTem():
+=======
+    '''
+    爬取天气
+    '''
+    out_temp,out_hum=getWeather()
+    hum_index = out_hum.index("%")
+    out_hum=out_hum[3:hum_index]
+    sensor=Adafruit_DHT.DHT11
+    gpio=17
+    humidity, temperature = Adafruit_DHT.read_retry(sensor, gpio)
+    await execute('insert into temp_hum(temp,humidity,out_tem,out_hum)values(?,?,?,?)', (temperature, humidity,out_temp,out_hum))
+    return {
+        'Temp': temperature,
+        'Humidity': humidity,
+        'outTemp': out_temp,
+        'outHumidity': out_hum
+        }
+@get('/api/getTem')
+async def getTem():
+>>>>>>> 08c91ff4e3d781b53f986c7d8689a05a0ea56be2
     '''
     获取室内温度与湿度
     '''
