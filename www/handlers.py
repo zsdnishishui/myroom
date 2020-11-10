@@ -524,10 +524,13 @@ def _format_addr(s):
 
 def chuangkan():
     zheng()
-
+    time.sleep(8)
+    stopC()
 
 def chuangguan():
     fan()
+    time.sleep(8)
+    stopC()
 
 
 def sendEmailFile(url):
