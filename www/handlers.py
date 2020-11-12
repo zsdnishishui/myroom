@@ -524,12 +524,12 @@ def _format_addr(s):
 
 def chuangkan():
     zheng()
-    time.sleep(16)
+    time.sleep(15)
     stopC()
 
 def chuangguan():
     fan()
-    time.sleep(11)
+    time.sleep(12)
     stopC()
 
 
