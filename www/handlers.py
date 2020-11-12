@@ -524,7 +524,7 @@ def _format_addr(s):
 
 def chuangkan():
     zheng()
-    time.sleep(17)
+    time.sleep(18)
     stopC()
 
 def chuangguan():
