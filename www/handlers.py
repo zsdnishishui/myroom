@@ -472,13 +472,13 @@ def delMyUrl():
     server.user(email)
     server.pass_(password)
     resp, mails, octets = server.list()
-    index = len(mails)
-    resp, lines, octets = server.retr(index)
-    msg_content = b'\r\n'.join(lines).decode('utf-8')
-    msg = Parser().parsestr(msg_content)
-    fro, sub = print_info(msg)
-    if "1053604549@qq.com" == fro and sub.startswith("http://"):
-        server.dele(index)
+    for index in range(len(mails)):
+        resp, lines, octets = server.retr(index+1)
+        msg_content = b'\r\n'.join(lines).decode('utf-8')
+        msg = Parser().parsestr(msg_content)
+        fro, sub = print_info(msg)
+        if "1053604549@qq.com" == fro and sub.startswith("http://"):
+            server.dele(index)
     # 关闭连接:
     server.quit()
 
