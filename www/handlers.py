@@ -144,7 +144,23 @@ def decode_str(s):
 def print_info(msg, indent=0):
     value = decode_str(msg.get('Subject', ''))
     hdr, addr = parseaddr(msg.get('From', ''))
-    return addr, value
+    if (msg.is_multipart()):
+        parts = msg.get_payload()
+        for n, part in enumerate(parts):
+            print('%spart %s' % ('  ' * indent, n))
+            print('%s--------------------' % ('  ' * indent))
+            print_info(part, indent + 1)
+    else:
+        content_type = msg.get_content_type()
+        if content_type == 'text/plain' or content_type == 'text/html':
+            content = msg.get_payload(decode=True)
+            charset = guess_charset(msg)
+            if charset:
+                content = content.decode(charset)
+            print('%sText: %s' % ('  ' * indent, content + '...'))
+        else:
+            print('%sAttachment: %s' % ('  ' * indent, content_type))
+    return addr, value, content
 
 
 @get('/api/schJob')
@@ -476,9 +492,9 @@ def delMyUrl():
         resp, lines, octets = server.retr(index+1)
         msg_content = b'\r\n'.join(lines).decode('utf-8')
         msg = Parser().parsestr(msg_content)
-        fro, sub = print_info(msg)
-        if "1053604549@qq.com" == fro and sub.startswith("http://"):
-            server.dele(index)
+        fro, sub, content = print_info(msg)
+        if "hello, send by Python..." == content:
+            server.dele(index + 1)
     # 关闭连接:
     server.quit()
 
