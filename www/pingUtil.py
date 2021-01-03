@@ -10,7 +10,7 @@ import subprocess
 import re
 import os
 def getHome():
-    return1 = os.system('ping zsd -c1')
+    return1 = os.system('ping 192.168.1.6 -c1')
     if return1:
         return "no"
     else:
