@@ -111,13 +111,6 @@ def init_deng_state():
         deng_state = 'open'
     else:
         deng_state = 'close'
-    while True:
-        if GPIO.input(40) == 1:
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Smoe is here !")
-        else:
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Nobody !")
-        time.sleep(5)
-
 
 def init_chuang_state():
     '''
@@ -471,8 +464,9 @@ def start_sch():
     sched.add_job(newRoomUrl, 'cron', hour='9', minute="30", timezone=pytz.utc, id='my_job_id6')
     sched.add_job(tem_job, 'cron', minute="*/30", id='my_job_id5')
     sched.add_job(resume_job, 'cron', hour='9', minute="30", timezone=pytz.utc, id='my_job_id4')
-    sched.add_job(getHome_job, 'cron', day_of_week='mon-fri', hour='10-12', minute="*/1", timezone=pytz.utc,
-                  id='my_job_id3')
+    # sched.add_job(getHome_job, 'cron', day_of_week='mon-fri', hour='10-12', minute="*/1", timezone=pytz.utc,
+    #               id='my_job_id3')
+    sched.add_job(getHome_job, 'cron', seconds="*/5", timezone=pytz.utc,id='my_job_id3')
     sched.add_job(delMyUrl, 'cron', hour='15', timezone=pytz.utc, id='my_job_id7')
     sched.add_job(cpufengshan, 'cron', minute="*/10", id='my_job_id8')
     sched.start()
@@ -600,8 +594,11 @@ def take_camera():
 
 async def getHome_job():
     if deng_state == "close":
-        if "yes" == getHome():
-            await api_register_users()
+        if GPIO.input(40) == 1:
+            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Smoe is here !")
+        else:
+            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Nobody !")
+            # await api_register_users()
 
 
 def videoCmd():
