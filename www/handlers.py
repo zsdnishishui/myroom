@@ -40,17 +40,19 @@ import Adafruit_DHT
 
 import sys
 from sys import path
+
 path.append('/home/pi')
 import config_default
+
 # 输入邮件地址, 口令和POP3服务器地址:
 email_config = config_default.config['email']
 
-email = email_config['email'] #你的email 的地址
-from_addr = email_config['from_addr'] #你的email 的地址
-password = email_config['password'] #你的email 的密码
-to_addr = email_config['to_addr'] #email 的目的地址
-smtp_server = email_config['smtp_server'] #smtp服务器 的地址
-pop3_server = email_config['pop3_server'] #pop3服务器 的地址
+email = email_config['email']  # 你的email 的地址
+from_addr = email_config['from_addr']  # 你的email 的地址
+password = email_config['password']  # 你的email 的密码
+to_addr = email_config['to_addr']  # email 的目的地址
+smtp_server = email_config['smtp_server']  # smtp服务器 的地址
+pop3_server = email_config['pop3_server']  # pop3服务器 的地址
 chuang_state = None
 deng_state = None
 sched = None
@@ -104,10 +106,17 @@ def init_deng_state():
     global deng_state
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(12, GPIO.OUT)
+    GPIO.setup(40, GPIO.IN)
     if GPIO.input(12) == 1:
         deng_state = 'open'
     else:
         deng_state = 'close'
+    while True:
+        if GPIO.input(40) == 1:
+            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Smoe is here !")
+        else:
+            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Nobody !")
+        time.sleep(5)
 
 
 def init_chuang_state():
@@ -489,7 +498,7 @@ def delMyUrl():
     server.pass_(password)
     resp, mails, octets = server.list()
     for index in range(len(mails)):
-        resp, lines, octets = server.retr(index+1)
+        resp, lines, octets = server.retr(index + 1)
         msg_content = b'\r\n'.join(lines).decode('utf-8')
         msg = Parser().parsestr(msg_content)
         fro, sub, content = print_info(msg)
@@ -542,6 +551,7 @@ def chuangkan():
     zheng()
     time.sleep(14)
     stopC()
+
 
 def chuangguan():
     fan()
