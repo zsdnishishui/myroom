@@ -548,7 +548,7 @@ def chuangkan():
 
 def chuangguan():
     fan()
-    time.sleep(11)
+    time.sleep(10)
     stopC()
 
 
@@ -595,6 +595,7 @@ async def getHome_job():
     if deng_state == "close":
         if GPIO.input(40) == 1:
             # print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Smoe is here !")
+            chuangguan()
             await api_register_users()
         # else:
         #     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + " Nobody !")
