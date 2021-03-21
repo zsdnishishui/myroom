@@ -548,7 +548,7 @@ def chuangkan():
 
 def chuangguan():
     fan()
-    time.sleep(6)
+    time.sleep(7)
     stopC()
 
 
