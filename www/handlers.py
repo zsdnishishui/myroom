@@ -542,13 +542,13 @@ def _format_addr(s):
 
 def chuangkan():
     zheng()
-    time.sleep(14)
+    time.sleep(10)
     stopC()
 
 
 def chuangguan():
     fan()
-    time.sleep(10)
+    time.sleep(8)
     stopC()
 
 
