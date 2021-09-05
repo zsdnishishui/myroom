@@ -85,7 +85,7 @@ async def init(loop):
     start_sch() #启动定时框架
     init_deng_state() #初始化灯的状态
 #    init_chuang_state() #初始化窗帘的状态
-    srv = await loop.create_server(app.make_handler(), '0.0.0.0', 9001)
+    srv = await loop.create_server(app.make_handler(), '0.0.0.0', 9000)
     logging.info('server started')
     return srv
 
